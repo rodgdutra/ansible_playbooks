@@ -1,0 +1,32 @@
+--- 
+- name: teste de playbook
+  hosts: ubuntu 
+  user: server
+  tasks:
+    
+    - name: passando arquivo para as maquinas
+      copy:
+        src: /home/rodrigo/ssh_addkey.sh
+        dest: /home/server
+    
+    - name: Testando a existencia de arquivo
+      command: bash -lc "cd /home/server/ && ls | grep ssh_addkey.sh"
+      register: result
+      ignore_errors: True
+    - debug:
+        msg: "File not exists..."
+      when: result is failed
+    - debug:
+        msg: "File exists..."
+      when: result is succeeded     
+    
+    - name: Executando como sudo
+      command: bash -lc "echo 123456 | sudo -S whoami && chmod +x ssh_addkey.sh && ./ssh_addkey.sh"
+      when: result is succeeded
+      register: sudo
+      ignore_errors: True
+    
+    - debug:
+        msg: "{{ sudo.stdout }}"
+
+    

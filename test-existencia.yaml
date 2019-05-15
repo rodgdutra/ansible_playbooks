@@ -1,0 +1,16 @@
+--- 
+- name: teste de playbook
+  hosts: ubuntu 
+  user: server
+  tasks:
+
+    - name: Testando a existencia de arquivo
+      command: bash -lc "cd /home/server/ && ls | grep oi"
+      register: result
+      ignore_errors: True
+    - debug:
+        msg: "File not exists..."
+      when: result is failed
+    - debug:
+        msg: "File exists..."
+      when: result is succeeded

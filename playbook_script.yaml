@@ -1,0 +1,54 @@
+--- 
+- name: Playbook de script em escala 
+  hosts: swarm-dev
+  tasks:
+
+#Declaração de variáveis globalmente    
+    - name: Declarando destino
+      command: bash -lc "echo /home/$(whoami)/"
+      register: destino
+
+    - name: Declarando fonte
+      command: bash -lc "echo /home/rodrigo/ssh_addkey2.sh"
+      register: fonte
+
+    - name: Declarando nome do script
+      command: bash -lc "echo ssh_addkey2.sh"
+      register: script
+
+    - name: Declarando Senha da(s) maquina(s)
+      command: bash -lc "echo gm4a80g3" 
+      register: password
+      
+#Execução do playbook 
+    
+    - name: Passando script para as maquinas
+      copy:
+        src: "{{ fonte.stdout }}"
+        dest: "{{ destino.stdout }}"
+    
+    - name: Testando a existencia de arquivo
+      command: bash -lc "cd "{{ destino.stdout }}" && ls | grep {{ script.stdout }}"
+      register: result
+      ignore_errors: True
+    - debug:
+        msg: "Script não foi localizado na maquina"
+      when: result is failed
+    - debug:
+        msg: "Script foi localizado na maquina"
+      when: result is succeeded     
+    
+    - name: Executando script
+      command: bash -lc "echo {{ password.stdout }} | sudo -S whoami && sudo chmod +x {{ script.stdout }} && sudo ./{{ script.stdout }}"
+      when: result is succeeded
+      register: exec
+      ignore_errors: True
+    - debug:
+        msg: "Script falhou"
+      when: exec is failed
+    - debug:
+        msg: "Script executado "
+      when: exec is succeeded   
+    - debug:
+        msg: "{{ exec.stdout_lines }}"
+   
